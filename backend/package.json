@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "@langchain/core": "^1.1.17",
+    "@langchain/google-genai": "^2.1.13",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "fs": "^0.0.1-security",
+    "langchain": "^1.2.13",
+    "multer": "^2.0.2",
+    "path": "^0.12.7",
+    "url": "^0.11.4"
+  }
+}
