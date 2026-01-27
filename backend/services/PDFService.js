@@ -20,16 +20,39 @@ class PDFService {
 
     cleanText(text){
         return text
-            .replace(/\+/g, ' ')
-            .replace(/\n+/g, '/n')
-            .trim();
+            .replace(/\+/g, ' ')    // Removes all unnecessary spaces in between characters or sentences
+            .replace(/\n+/g, '/n')  // Removes all unnecessary new lines
+            .trim();                // removes all unnecessary trailing spaces
     }
 
     splitTextIntoChunks(text, chunksize = 1000, overlap = 200){
-        
+        const chunks = [];
+        let startIndex = 0;
+
+        while(startIndex < text.length){
+            let endIndex = startIndex + chunksize;
+
+            if(endIndex < text.length){
+                const lastSentenceEnd = Math.max(
+                    text.lastIndexOf('.', endIndex),
+                    text.lastIndexOf('?', endIndex),
+                    text.lastIndexOf('!', endIndex)
+                )
+
+                if(lastSentenceEnd > startIndex + chunksize/2){
+                    endIndex = lastSentenceEnd + 1;
+                }
+            }
+
+            const chunk = text.substring(startIndex, endIndex).trim();
+
+            if(chunk.length > 0){
+                chunks.push(chunk);
+            }
+
+            startIndex = endIndex - overlap;
+        }
     }
-
-
 }
 
 module.exports = new PDFService();
