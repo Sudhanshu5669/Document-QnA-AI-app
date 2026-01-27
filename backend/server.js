@@ -1,9 +1,10 @@
 // I will comment heavily (or at least try to) so that I (or anyone reading this code) in the future will be able to understand anything i did. Should i continue this comment on another line? Maybe yeah.
 // This might not be the best code there is out there, but i am sure by the time i end writing this, i will have learned a lot from this project.
-
 const express = require('express')
 const dotenv = require('dotenv');
 const multer = require('multer');
+const {QdrantVectorStore} = require('@langchain/qdrant')
+const { GoogleGenerativeAIEmbeddings } = require('@langchain/google-genai')
 
 dotenv.config();
 
@@ -78,6 +79,10 @@ app.post('api/upload', upload.single('pdf'), (req, res)=>{
         })
     }
 });
+
+app.post('/api/ask', (req, res)=>{
+    
+})
 
 app.listen(PORT, ()=>{
     console.log("Server started...")
