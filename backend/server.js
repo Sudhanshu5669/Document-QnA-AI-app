@@ -3,8 +3,13 @@
 const express = require('express')
 const dotenv = require('dotenv');
 const multer = require('multer');
+const cors = require('cors')
+const fs = require('fs')
+const path = require('path')
 const {QdrantVectorStore} = require('@langchain/qdrant')
 const { GoogleGenerativeAIEmbeddings } = require('@langchain/google-genai')
+const PDFService = require('./services/PDFService');
+const { log } = require('console');
 
 dotenv.config();
 
@@ -13,9 +18,10 @@ const PORT = process.env.PORT  || 5000;
 
 // CORS - It will allow the Backend to communicate with the frontend.
 app.use(cors({
-    origin:'https://localhost:3000',
+    origin:'http://localhost:5173',
     credentials: true
 }))
+
 
 // Middlewares to parse incoming data. First is for data sent using post requests and second is for form data.
 app.use(express.json());
@@ -57,7 +63,7 @@ const upload = multer({
     }
 })
 
-app.post('api/upload', upload.single('pdf'), (req, res)=>{
+app.post('/api/upload', upload.single('pdf'), async (req, res)=>{
     try {
         if(!req.file){
             res.json({
@@ -65,6 +71,16 @@ app.post('api/upload', upload.single('pdf'), (req, res)=>{
                 error: "No file uploaded"
             });
         }
+
+        const filePath = req.file.path;
+        const text = await PDFService.extractTextFromPdf(filePath)        
+        const cleanedText = PDFService.cleanText(text);
+        const chunks = PDFService.splitTextIntoChunks(cleanedText)
+
+        console.log(chunks);
+        
+        
+        
     } catch(error){
         console.log("[ERROR] Upload Failed:", error)
 

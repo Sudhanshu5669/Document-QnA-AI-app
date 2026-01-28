@@ -1,4 +1,6 @@
-const pdf = require('pdf-parse')
+// Check if the module has a 'default' property and use it, otherwise use the module itself
+const pdfParseLib = require('pdf-parse');
+const pdfParse = pdfParseLib.default || pdfParseLib;
 const fs = require('fs');
 const { log } = require('console');
 
@@ -7,7 +9,7 @@ class PDFService {
     async extractTextFromPdf(filePath){
         try{
             const dataBuffer = fs.readFileSync(filePath);
-            const data = await pdf(dataBuffer);
+            const data = await pdfParse(dataBuffer);
 
             console.log(`[PDF Service] successfully extracted ${data.numpages} from the pdf.`);
 
@@ -19,11 +21,18 @@ class PDFService {
     }
 
     cleanText(text){
-        return text
-            .replace(/\+/g, ' ')    // Removes all unnecessary spaces in between characters or sentences
-            .replace(/\n+/g, '/n')  // Removes all unnecessary new lines
-            .trim();                // removes all unnecessary trailing spaces
-    }
+    return text
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        // Replace multiple newlines (paragraphs) with a placeholder
+        .replace(/\n{2,}/g, "___PARAGRAPH___")
+        // Replace single newlines (line breaks) with space
+        .replace(/\n/g, " ")
+        // Restore paragraphs
+        .replace(/___PARAGRAPH___/g, "\n\n")
+        .replace(/\s+/g, ' ') 
+        .trim();
+}
 
     splitTextIntoChunks(text, chunksize = 1000, overlap = 200){
         const chunks = [];
@@ -52,6 +61,7 @@ class PDFService {
 
             startIndex = endIndex - overlap;
         }
+        return chunks;
     }
 }
 
