@@ -9,11 +9,10 @@ const path = require('path')
 const { QdrantVectorStore } = require('@langchain/qdrant')
 const { GoogleGenerativeAIEmbeddings } = require('@langchain/google-genai')
 const PDFService = require('./services/PDFService');
-const { log } = require('console');
-const z = require("zod");
-const { tool } = require("@langchain/core/tools");
-const {createAgent} = require('langchain')
-
+const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
+const { PromptTemplate } = require("@langchain/core/prompts");
+const { StringOutputParser } = require("@langchain/core/output_parsers");
+const { RunnableSequence } = require("@langchain/core/runnables");
 
 dotenv.config();
 
@@ -25,7 +24,6 @@ app.use(cors({
     origin: 'http://localhost:5173',
     credentials: true
 }))
-
 
 // Middlewares to parse incoming data. First is for data sent using post requests and second is for form data.
 app.use(express.json());
@@ -48,9 +46,7 @@ const storage = multer.diskStorage({
     }
 })
 
-// This will filter any files that are not PDFs. Why am i writing a comment for every single function i write...
-// Well, i am not very used to writing backend code honestly, especially multer... or anything written in this file.
-// I guess that is the reason I'm writing a comment before everything.
+// This will filter any files that are not PDFs.
 const fileFilter = (req, file, cb) => {
     if (file.mimetype == 'application/pdf') {
         cb(null, true);
@@ -67,52 +63,23 @@ const upload = multer({
     }
 })
 
+// Initialize LLM
+const llm = new ChatGoogleGenerativeAI({
+    model: "gemini-2.5-flash",
+    temperature: 0,
+    apiKey: process.env.GOOGLE_API_KEY,
+});
 
+// Initialize embeddings
 const embeddings = new GoogleGenerativeAIEmbeddings({
     model: "gemini-embedding-001",
     apiKey: process.env.GOOGLE_API_KEY
 });
-        
-const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
-    url: process.env.QDRANT_URL,
-    collectionName: "langchainjs-testing",
-});
-
-
-const retrieveSchema = z.object({ query: z.string() });
-
-const retrieve = tool(
-  async ({ query }) => {
-    const retrievedDocs = await vectorStore.similaritySearch(query, 2);
-    
-    const serialized = retrievedDocs
-      .map(
-        (doc) => `Source: ${doc.metadata.source}\nContent: ${doc.pageContent}`
-      )
-      .join("\n");
-      
-    return [serialized, retrievedDocs];
-  },
-  {
-    name: "retrieve",
-    description: "Retrieve information related to a query.",
-    schema: retrieveSchema,
-    responseFormat: "content_and_artifact",
-  }
-);
-
-const tools = [retrieve];
-const systemPrompt = new SystemMessage(
-    "You have access to a tool that retrieves context from a blog post. " +
-    "Use the tool to help answer user queries."
-)
-
-const agent = createAgent({ model: "gemini-2.5-flash", tools, systemPrompt });
 
 app.post('/api/upload', upload.single('pdf'), async (req, res) => {
     try {
         if (!req.file) {
-            res.json({
+            return res.json({
                 success: false,
                 error: "No file uploaded"
             });
@@ -132,8 +99,17 @@ app.post('/api/upload', upload.single('pdf'), async (req, res) => {
                 }
             }));
 
+        const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
+            url: process.env.QDRANT_URL,
+            collectionName: "langchainjs-testing",
+        });
+
         await vectorStore.addDocuments(documents);
 
+        res.json({
+            success: true,
+            message: "PDF uploaded and processed successfully"
+        });
 
     } catch (error) {
         console.log("[ERROR] Upload Failed:", error)
@@ -144,27 +120,85 @@ app.post('/api/upload', upload.single('pdf'), async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: "Failes to process the pdf",
+            error: "Failed to process the pdf",
             details: error.message
         })
     }
 });
 
+// Simple RAG chain setup
+const promptTemplate = PromptTemplate.fromTemplate(
+    `You are a helpful assistant answering questions based on the provided context from a PDF document.
+
+Context from the document:
+{context}
+
+Question: {question}
+
+Instructions:
+- Answer the question based ONLY on the context provided above
+- If the context doesn't contain relevant information, say "I couldn't find that information in the document"
+- Be concise and accurate
+- Do not make up information
+
+Answer:`
+);
+
 app.post('/api/ask', async (req, res) => {
-    const query = req.body.message;
-    let agentInputs = { messages: [{ role: "user", content: query }] };
+    try {
+        const { message } = req.body;
+        
+        if (!message) {
+            return res.status(400).json({ success: false, error: "Message is required" });
+        }
 
-    const stream = await agent.stream(agentInputs, {
-        streamMode: "values",
-    });
+        console.log("Question:", message);
 
-    for await (const step of stream) {
-        const lastMessage = step.messages[step.messages.length - 1];
-        console.log(`[${lastMessage.role}]: ${lastMessage.content}`);
-        console.log("-----\n");
+        // Get vector store
+        const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
+            url: process.env.QDRANT_URL,
+            collectionName: "langchainjs-testing",
+        });
+
+        // Retrieve relevant documents
+        const retriever = vectorStore.asRetriever({ k: 4 });
+        const docs = await retriever.invoke(message);
+        
+        console.log(`Retrieved ${docs.length} documents`);
+
+        // Combine document contents
+        const context = docs.map(doc => doc.pageContent).join("\n\n");
+
+        // Create the chain
+        const chain = RunnableSequence.from([
+            promptTemplate,
+            llm,
+            new StringOutputParser(),
+        ]);
+
+        // Get answer
+        const answer = await chain.invoke({
+            context: context,
+            question: message,
+        });
+
+        console.log("Answer:", answer);
+
+        res.json({
+            success: true,
+            answer: answer.trim(),
+        });
+
+    } catch (error) {
+        console.error("Error in /ask:", error);
+        res.status(500).json({ 
+            success: false, 
+            error: "Failed to generate answer",
+            details: error.message 
+        });
     }
-})
+});
 
 app.listen(PORT, () => {
-    console.log("Server started...")
+    console.log(`Server started on port ${PORT}...`)
 })
