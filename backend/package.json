@@ -1,18 +1,26 @@
 {
+  "name": "doc-helper-backend",
+  "version": "1.0.0",
+  "description": "Backend for Doc Helper",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
   "dependencies": {
-    "@langchain/core": "^1.1.17",
-    "@langchain/google-genai": "^2.1.13",
-    "@langchain/qdrant": "^1.0.1",
-    "@qdrant/js-client-rest": "^1.16.2",
-    "cors": "^2.8.6",
-    "dotenv": "^17.2.3",
-    "express": "^5.2.1",
-    "fs": "^0.0.1-security",
-    "langchain": "^1.2.13",
-    "multer": "^2.0.2",
-    "path": "^0.12.7",
+    "@langchain/core": "^0.3.0",
+    "@langchain/google-genai": "^0.1.0",
+    "@langchain/langgraph": "^0.2.0",
+    "@langchain/qdrant": "^0.1.0",
+    "@qdrant/js-client-rest": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "langchain": "^0.3.2",
+    "multer": "^1.4.5-lts.1",
     "pdf-parse": "^1.1.1",
-    "url": "^0.11.4",
-    "uuid": "^13.0.0"
+    "uuid": "^10.0.0",
+    "zod": "^3.23.8"
   }
 }

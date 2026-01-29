@@ -1,11 +1,7 @@
-import Upload from "./Upload";
+import ChatApp from './ChatApp';
 
 function App() {
-  return (
-    <div>
-      <Upload />
-    </div>
-  );
+  return <ChatApp />;
 }
 
 export default App;
