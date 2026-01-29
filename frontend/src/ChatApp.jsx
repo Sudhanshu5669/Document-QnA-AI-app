@@ -36,28 +36,13 @@ function ChatApp() {
         body: JSON.stringify({ message: userMessage }),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-
-      // Check if we got any response
       if (response.ok) {
-        // Try to parse JSON if available
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const data = await response.json();
-          console.log('Response data:', data);
-          
-          setMessages(prev => [...prev, { 
-            role: 'assistant', 
-            content: data.response || JSON.stringify(data) 
-          }]);
-        } else {
-          // If no JSON, just show success
-          setMessages(prev => [...prev, { 
-            role: 'assistant', 
-            content: 'Request sent successfully. Check your server console for the response.' 
-          }]);
-        }
+        const data = await response.json();
+        
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: data.answer || data.response || JSON.stringify(data) 
+        }]);
       } else {
         throw new Error(`Server responded with status: ${response.status}`);
       }
@@ -66,7 +51,7 @@ function ChatApp() {
       console.error('Error:', error);
       setMessages(prev => [...prev, { 
         role: 'error', 
-        content: `Error: ${error.message}. Your request was sent but the server might not be responding with data yet.` 
+        content: `Error: ${error.message}` 
       }]);
     } finally {
       setIsLoading(false);
@@ -74,107 +59,335 @@ function ChatApp() {
   };
 
   return (
-    <div className="chat-container">
-      <div className="chat-header">
-        <h1>PDF Chat Assistant</h1>
-        <p>Ask questions about your uploaded documents</p>
-        <small style={{ opacity: 0.8, fontSize: '0.8rem' }}>
-          Note: Check your server console for agent responses
-        </small>
+    <div className="app-container">
+      {/* Header */}
+      <header className="header">
+        <div className="header-content">
+          <div className="logo">
+            <span className="logo-icon">📄</span>
+            <span className="logo-text">DOC QnA</span>
+          </div>
+          <nav className="nav">
+            <a href="#about" className="nav-link">ABOUT</a>
+            <a href="#features" className="nav-link">FEATURES</a>
+            <a href="#docs" className="nav-link">DOCS</a>
+          </nav>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <div className="hero-section">
+        <div className="hero-content">
+          <h1 className="hero-title">
+            NO CONFUSION,
+            <br />
+            ONLY CLEAR ANSWERS
+          </h1>
+          <p className="hero-subtitle">
+            WE EMPOWER YOU TO FIND BOLD SOLUTIONS THAT UNLOCK
+            <br />
+            YOUR DOCUMENTS AND ELIMINATE UNCERTAINTY.
+          </p>
+          <button className="cta-button" onClick={() => document.querySelector('.message-input')?.focus()}>
+            ASK QUESTIONS
+          </button>
+        </div>
+        
+        {/* Decorative Globe */}
+        <div className="globe-container">
+          <div className="globe"></div>
+        </div>
       </div>
 
-      <div className="messages-container">
-        {messages.length === 0 && (
-          <div className="empty-state">
-            <p>Start a conversation by asking a question about your documents!</p>
-            <p style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
-              The server will process your query and log the results to the console.
-            </p>
+      {/* Chat Section */}
+      <div className="chat-section">
+        <div className="chat-card">
+          <div className="card-header">
+            <div className="card-icon">💬</div>
+            <h3 className="card-title">RAG BASED QnA APPLICATION BY SUDHANSHU</h3>
           </div>
-        )}
-        
-        {messages.map((message, index) => (
-          <div key={index} className={`message ${message.role}`}>
-            <div className="message-content">
-              <strong>{message.role === 'user' ? 'You' : message.role === 'error' ? 'Error' : 'Assistant'}:</strong>
-              <p>{message.content}</p>
-            </div>
-          </div>
-        ))}
-        
-        {isLoading && (
-          <div className="message assistant">
-            <div className="message-content">
-              <strong>Assistant:</strong>
-              <p className="typing-indicator">Processing your query...</p>
-            </div>
-          </div>
-        )}
-        
-        <div ref={messagesEndRef} />
-      </div>
+          <p className="card-description">
+            ASK QUESTIONS ABOUT YOUR UPLOADED DOCUMENTS AND GET
+            INSTANT, ACCURATE ANSWERS.
+          </p>
+        </div>
 
-      <form onSubmit={handleSubmit} className="input-form">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask a question about your documents..."
-          disabled={isLoading}
-          className="message-input"
-        />
-        <button 
-          type="submit" 
-          disabled={isLoading || !input.trim()}
-          className="send-button"
-        >
-          {isLoading ? 'Sending...' : 'Send'}
-        </button>
-      </form>
+        {/* Messages Container */}
+        <div className="messages-wrapper">
+          <div className="messages-container">
+            {messages.length === 0 && (
+              <div className="empty-state">
+                <div className="empty-icon">🔍</div>
+                <p className="empty-title">Ready to analyze your documents</p>
+                <p className="empty-subtitle">
+                  Upload a PDF and start asking questions to get instant answers
+                </p>
+              </div>
+            )}
+            
+            {messages.map((message, index) => (
+              <div key={index} className={`message ${message.role}`}>
+                <div className="message-avatar">
+                  {message.role === 'user' ? '👤' : message.role === 'error' ? '⚠️' : '🤖'}
+                </div>
+                <div className="message-bubble">
+                  <div className="message-header">
+                    {message.role === 'user' ? 'You' : message.role === 'error' ? 'Error' : 'AI Assistant'}
+                  </div>
+                  <div className="message-text">{message.content}</div>
+                </div>
+              </div>
+            ))}
+            
+            {isLoading && (
+              <div className="message assistant">
+                <div className="message-avatar">🤖</div>
+                <div className="message-bubble loading">
+                  <div className="message-header">AI Assistant</div>
+                  <div className="message-text">
+                    <span className="typing-dots">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+
+        {/* Input Form */}
+        <form onSubmit={handleSubmit} className="input-form">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="ASK A QUESTION ABOUT YOUR DOCUMENT..."
+            disabled={isLoading}
+            className="message-input"
+          />
+          <button 
+            type="submit" 
+            disabled={isLoading || !input.trim()}
+            className="send-button"
+          >
+            {isLoading ? '⟳' : '→'}
+          </button>
+        </form>
+      </div>
 
       <style jsx>{`
         * {
           box-sizing: border-box;
-        }
-
-        .chat-container {
-          display: flex;
-          flex-direction: column;
-          height: 100vh;
-          max-width: 900px;
-          margin: 0 auto;
-          background: #f5f5f5;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-            'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-            sans-serif;
-        }
-
-        .chat-header {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          padding: 1.5rem;
-          text-align: center;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .chat-header h1 {
-          margin: 0 0 0.5rem 0;
-          font-size: 1.8rem;
-        }
-
-        .chat-header p {
           margin: 0;
-          opacity: 0.9;
+          padding: 0;
+        }
+
+        .app-container {
+          min-height: 100vh;
+          background: #000000;
+          color: #ffffff;
+          font-family: 'Courier New', 'Courier', monospace;
+          overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+          background: #000000;
+          border-bottom: 2px solid #FFD700;
+          padding: 1rem 2rem;
+          position: sticky;
+          top: 0;
+          z-index: 100;
+        }
+
+        .header-content {
+          max-width: 1400px;
+          margin: 0 auto;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .logo {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-weight: bold;
+          font-size: 1.2rem;
+          color: #FFD700;
+        }
+
+        .logo-icon {
+          font-size: 1.5rem;
+        }
+
+        .nav {
+          display: flex;
+          gap: 2rem;
+        }
+
+        .nav-link {
+          color: #FFD700;
+          text-decoration: none;
+          font-size: 0.85rem;
+          font-weight: 600;
+          letter-spacing: 1px;
+          transition: opacity 0.3s;
+        }
+
+        .nav-link:hover {
+          opacity: 0.7;
+        }
+
+        /* Hero Section */
+        .hero-section {
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 4rem 2rem;
+          position: relative;
+          min-height: 60vh;
+          display: flex;
+          align-items: center;
+        }
+
+        .hero-content {
+          flex: 1;
+          z-index: 2;
+        }
+
+        .hero-title {
+          font-size: clamp(2.5rem, 6vw, 4.5rem);
+          font-weight: 900;
+          color: #FFD700;
+          line-height: 1.1;
+          margin-bottom: 1.5rem;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+        }
+
+        .hero-subtitle {
+          font-size: clamp(0.85rem, 1.5vw, 1rem);
+          color: #CCCCCC;
+          margin-bottom: 2rem;
+          line-height: 1.6;
+          letter-spacing: 0.5px;
+        }
+
+        .cta-button {
+          background: #FFD700;
+          color: #000000;
+          border: none;
+          padding: 1rem 2.5rem;
           font-size: 0.9rem;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.3s;
+          letter-spacing: 1px;
+          font-family: 'Courier New', monospace;
+          border: 2px solid #FFD700;
+        }
+
+        .cta-button:hover {
+          background: transparent;
+          color: #FFD700;
+          transform: translateY(-2px);
+        }
+
+        /* Globe Decoration */
+        .globe-container {
+          position: absolute;
+          right: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 500px;
+          height: 500px;
+          z-index: 1;
+        }
+
+        .globe {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          background: radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.1), transparent);
+          border: 1px solid rgba(255, 215, 0, 0.2);
+          position: relative;
+          animation: rotate 20s linear infinite;
+        }
+
+        .globe::before {
+          content: '';
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          background: 
+            repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255, 215, 0, 0.1) 20px, rgba(255, 215, 0, 0.1) 22px),
+            repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255, 215, 0, 0.1) 20px, rgba(255, 215, 0, 0.1) 22px);
+        }
+
+        @keyframes rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        /* Chat Section */
+        .chat-section {
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 0 2rem 4rem;
+        }
+
+        .chat-card {
+          background: rgba(255, 215, 0, 0.05);
+          border: 2px solid #FFD700;
+          padding: 2rem;
+          margin-bottom: 2rem;
+        }
+
+        .card-header {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          margin-bottom: 1rem;
+        }
+
+        .card-icon {
+          font-size: 1.5rem;
+        }
+
+        .card-title {
+          font-size: 1.2rem;
+          color: #FFD700;
+          letter-spacing: 2px;
+        }
+
+        .card-description {
+          color: #CCCCCC;
+          line-height: 1.6;
+          font-size: 0.9rem;
+          letter-spacing: 0.5px;
+        }
+
+        /* Messages */
+        .messages-wrapper {
+          background: rgba(255, 215, 0, 0.03);
+          border: 1px solid rgba(255, 215, 0, 0.2);
+          margin-bottom: 1rem;
+          max-height: 500px;
+          overflow: hidden;
         }
 
         .messages-container {
-          flex: 1;
+          height: 500px;
           overflow-y: auto;
-          padding: 1.5rem;
+          padding: 2rem;
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 1.5rem;
         }
 
         .empty-state {
@@ -183,21 +396,34 @@ function ChatApp() {
           align-items: center;
           justify-content: center;
           height: 100%;
-          color: #666;
           text-align: center;
-          padding: 2rem;
         }
 
-        .empty-state p {
-          margin: 0;
+        .empty-icon {
+          font-size: 4rem;
+          margin-bottom: 1rem;
+          opacity: 0.3;
+        }
+
+        .empty-title {
+          color: #FFD700;
+          font-size: 1.2rem;
+          margin-bottom: 0.5rem;
+          letter-spacing: 1px;
+        }
+
+        .empty-subtitle {
+          color: #888888;
+          font-size: 0.9rem;
         }
 
         .message {
-          max-width: 80%;
-          animation: fadeIn 0.3s ease-in;
+          display: flex;
+          gap: 1rem;
+          animation: slideIn 0.3s ease-out;
         }
 
-        @keyframes fadeIn {
+        @keyframes slideIn {
           from {
             opacity: 0;
             transform: translateY(10px);
@@ -209,97 +435,146 @@ function ChatApp() {
         }
 
         .message.user {
-          align-self: flex-end;
+          flex-direction: row-reverse;
         }
 
-        .message.assistant,
-        .message.error {
-          align-self: flex-start;
+        .message-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: rgba(255, 215, 0, 0.1);
+          border: 2px solid #FFD700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.2rem;
+          flex-shrink: 0;
         }
 
-        .message-content {
-          background: white;
+        .message-bubble {
+          background: rgba(255, 215, 0, 0.05);
+          border: 1px solid rgba(255, 215, 0, 0.3);
           padding: 1rem;
-          border-radius: 12px;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+          border-radius: 4px;
+          max-width: 70%;
         }
 
-        .message.user .message-content {
-          background: #667eea;
-          color: white;
+        .message.user .message-bubble {
+          background: rgba(255, 215, 0, 0.1);
+          border-color: #FFD700;
         }
 
-        .message.error .message-content {
-          background: #ff6b6b;
-          color: white;
+        .message.error .message-bubble {
+          background: rgba(255, 0, 0, 0.1);
+          border-color: #FF0000;
         }
 
-        .message-content strong {
-          display: block;
+        .message-header {
+          color: #FFD700;
+          font-size: 0.75rem;
           margin-bottom: 0.5rem;
-          font-size: 0.85rem;
-          opacity: 0.8;
+          font-weight: bold;
+          letter-spacing: 1px;
+          text-transform: uppercase;
         }
 
-        .message-content p {
-          margin: 0;
-          line-height: 1.5;
+        .message-text {
+          color: #FFFFFF;
+          line-height: 1.6;
+          font-size: 0.9rem;
           white-space: pre-wrap;
           word-wrap: break-word;
         }
 
-        .typing-indicator {
-          font-style: italic;
-          opacity: 0.7;
+        .message.error .message-text {
+          color: #FF6666;
         }
 
+        /* Typing Animation */
+        .typing-dots {
+          display: flex;
+          gap: 4px;
+        }
+
+        .typing-dots span {
+          width: 6px;
+          height: 6px;
+          background: #FFD700;
+          border-radius: 50%;
+          animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+          animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+          0%, 60%, 100% {
+            transform: translateY(0);
+            opacity: 0.5;
+          }
+          30% {
+            transform: translateY(-10px);
+            opacity: 1;
+          }
+        }
+
+        /* Input Form */
         .input-form {
           display: flex;
-          gap: 0.5rem;
+          gap: 1rem;
+          background: #000000;
+          border: 2px solid #FFD700;
           padding: 1rem;
-          background: white;
-          border-top: 1px solid #e0e0e0;
         }
 
         .message-input {
           flex: 1;
-          padding: 0.75rem 1rem;
-          border: 2px solid #e0e0e0;
-          border-radius: 24px;
-          font-size: 1rem;
+          background: rgba(255, 215, 0, 0.05);
+          border: 1px solid rgba(255, 215, 0, 0.3);
+          color: #FFFFFF;
+          padding: 1rem;
+          font-size: 0.9rem;
           outline: none;
-          transition: border-color 0.2s;
-          font-family: inherit;
+          font-family: 'Courier New', monospace;
+          letter-spacing: 0.5px;
+        }
+
+        .message-input::placeholder {
+          color: #666666;
+          letter-spacing: 0.5px;
         }
 
         .message-input:focus {
-          border-color: #667eea;
+          border-color: #FFD700;
+          background: rgba(255, 215, 0, 0.08);
         }
 
         .message-input:disabled {
-          background: #f5f5f5;
+          opacity: 0.5;
           cursor: not-allowed;
         }
 
         .send-button {
-          padding: 0.75rem 1.5rem;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
+          width: 60px;
+          background: #FFD700;
+          color: #000000;
           border: none;
-          border-radius: 24px;
-          font-size: 1rem;
-          font-weight: 600;
+          font-size: 1.5rem;
+          font-weight: bold;
           cursor: pointer;
-          transition: transform 0.2s, opacity 0.2s;
+          transition: all 0.3s;
+          font-family: 'Courier New', monospace;
         }
 
         .send-button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
-        }
-
-        .send-button:active:not(:disabled) {
-          transform: translateY(0);
+          background: #000000;
+          color: #FFD700;
+          border: 2px solid #FFD700;
         }
 
         .send-button:disabled {
@@ -307,22 +582,53 @@ function ChatApp() {
           cursor: not-allowed;
         }
 
-        /* Scrollbar styling */
+        /* Scrollbar */
         .messages-container::-webkit-scrollbar {
           width: 8px;
         }
 
         .messages-container::-webkit-scrollbar-track {
-          background: #f1f1f1;
+          background: rgba(255, 215, 0, 0.05);
         }
 
         .messages-container::-webkit-scrollbar-thumb {
-          background: #888;
+          background: rgba(255, 215, 0, 0.3);
           border-radius: 4px;
         }
 
         .messages-container::-webkit-scrollbar-thumb:hover {
-          background: #555;
+          background: rgba(255, 215, 0, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+          .globe-container {
+            opacity: 0.3;
+            width: 400px;
+            height: 400px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .nav {
+            display: none;
+          }
+
+          .hero-section {
+            padding: 2rem 1rem;
+          }
+
+          .globe-container {
+            display: none;
+          }
+
+          .message-bubble {
+            max-width: 85%;
+          }
+
+          .chat-section {
+            padding: 0 1rem 2rem;
+          }
         }
       `}</style>
     </div>
