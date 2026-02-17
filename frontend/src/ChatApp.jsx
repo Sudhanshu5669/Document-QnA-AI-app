@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, User, Bot, Sparkles, AlertTriangle } from 'lucide-react';
+import { Send, User, Bot, Sparkles, AlertTriangle, Zap } from 'lucide-react';
 
 function ChatApp() {
   const [messages, setMessages] = useState([]);
@@ -53,35 +53,56 @@ function ChatApp() {
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      height: 'calc(100vh - 4rem)', // Adjust for layout padding
-      maxWidth: '1000px',
+      height: 'calc(100vh - 4rem)',
+      maxWidth: '1200px',
       margin: '0 auto',
-      background: 'var(--bg-card)',
+      background: 'var(--bg-glass)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
       borderRadius: '24px',
       border: '1px solid var(--border-color)',
       overflow: 'hidden',
-      boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+      boxShadow: 'var(--shadow-xl)'
     }}>
       {/* Header */}
       <div style={{
-        padding: '1.5rem',
+        padding: '1.5rem 2rem',
         borderBottom: '1px solid var(--border-color)',
         display: 'flex',
         alignItems: 'center',
         gap: '1rem',
-        background: 'rgba(5, 5, 5, 0.8)',
+        background: 'rgba(10, 10, 15, 0.8)',
         backdropFilter: 'blur(10px)'
       }}>
-        <div style={{
-          background: 'var(--accent-glow)',
-          padding: '0.5rem',
-          borderRadius: '12px'
-        }}>
-          <Sparkles size={24} color="var(--accent-primary)" />
-        </div>
+        <motion.div
+          animate={{ rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          style={{
+            background: 'var(--gradient-primary)',
+            padding: '0.75rem',
+            borderRadius: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: 'var(--glow-primary)'
+          }}
+        >
+          <Sparkles size={24} color="#000" />
+        </motion.div>
         <div>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>AI Assistant</h2>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Ready to answer your questions</p>
+          <h2 style={{
+            fontSize: '1.25rem',
+            fontWeight: 700,
+            background: 'var(--gradient-primary)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
+            AI Assistant
+          </h2>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+            Ask me anything about your documents
+          </p>
         </div>
       </div>
 
@@ -97,27 +118,57 @@ function ChatApp() {
         <AnimatePresence>
           {messages.length === 0 && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.5 }}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: '100%',
-                opacity: 0.5
+                gap: '1.5rem'
               }}
             >
-              <Bot size={64} style={{ marginBottom: '1rem', color: 'var(--accent-primary)' }} />
-              <p>Ask anything about your documents.</p>
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity }}
+                style={{
+                  background: 'var(--gradient-primary)',
+                  padding: '2rem',
+                  borderRadius: '24px',
+                  boxShadow: 'var(--glow-strong)'
+                }}
+              >
+                <Bot size={64} color="#000" />
+              </motion.div>
+              <div style={{ textAlign: 'center' }}>
+                <h3 style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 700,
+                  marginBottom: '0.5rem',
+                  color: 'var(--text-primary)'
+                }}>
+                  Ready to assist you
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
+                  Start by asking a question about your documents
+                </p>
+              </div>
             </motion.div>
           )}
 
           {messages.map((msg, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{
+                duration: 0.4,
+                ease: [0.4, 0, 0.2, 1],
+                delay: idx * 0.05
+              }}
               style={{
                 display: 'flex',
                 gap: '1rem',
@@ -125,51 +176,108 @@ function ChatApp() {
                 alignItems: 'flex-start'
               }}
             >
-              <div style={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                background: msg.role === 'user' ? 'var(--accent-secondary)' : 'var(--bg-primary)',
-                border: '1px solid var(--border-color)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                {msg.role === 'user' ? <User size={18} /> : msg.role === 'error' ? <AlertTriangle size={18} color="red" /> : <Bot size={18} color="var(--accent-primary)" />}
-              </div>
+              {/* Avatar */}
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: '50%',
+                  background: msg.role === 'user'
+                    ? 'var(--gradient-secondary)'
+                    : msg.role === 'error'
+                      ? 'var(--accent-error)'
+                      : 'var(--gradient-primary)',
+                  border: '2px solid var(--border-color)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  boxShadow: msg.role === 'user' ? 'var(--glow-secondary)' : 'var(--glow-primary)'
+                }}
+              >
+                {msg.role === 'user' ? (
+                  <User size={20} color="#000" />
+                ) : msg.role === 'error' ? (
+                  <AlertTriangle size={20} color="#fff" />
+                ) : (
+                  <Bot size={20} color="#000" />
+                )}
+              </motion.div>
 
+              {/* Message Bubble */}
               <div style={{
-                maxWidth: '70%',
-                background: msg.role === 'user' ? 'var(--accent-secondary)' : 'rgba(255, 255, 255, 0.03)',
-                padding: '1rem',
-                borderRadius: '16px',
-                borderTopRightRadius: msg.role === 'user' ? 4 : 16,
-                borderTopLeftRadius: msg.role !== 'user' ? 4 : 16,
-                lineHeight: 1.6,
-                fontSize: '0.95rem'
+                maxWidth: '75%',
+                background: msg.role === 'user'
+                  ? 'var(--gradient-secondary)'
+                  : msg.role === 'error'
+                    ? 'rgba(239, 68, 68, 0.1)'
+                    : 'rgba(255, 255, 255, 0.05)',
+                padding: '1.25rem',
+                borderRadius: '18px',
+                borderTopRightRadius: msg.role === 'user' ? 4 : 18,
+                borderTopLeftRadius: msg.role !== 'user' ? 4 : 18,
+                lineHeight: 1.7,
+                fontSize: '1rem',
+                border: `1px solid ${msg.role === 'error' ? 'var(--accent-error)' : 'var(--border-color)'}`,
+                boxShadow: 'var(--shadow-md)',
+                color: msg.role === 'user' ? '#000' : 'var(--text-primary)',
+                fontWeight: msg.role === 'user' ? 600 : 400
               }}>
                 {msg.content}
               </div>
             </motion.div>
           ))}
 
+          {/* Loading Indicator */}
           {isLoading && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              style={{ display: 'flex', gap: '1rem' }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}
             >
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Bot size={18} color="var(--accent-primary)" />
+              <div style={{
+                width: 42,
+                height: 42,
+                borderRadius: '50%',
+                background: 'var(--gradient-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: 'var(--glow-primary)'
+              }}>
+                <Bot size={20} color="#000" />
               </div>
-              <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1rem', borderRadius: '16px', display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                padding: '1.25rem',
+                borderRadius: '18px',
+                borderTopLeftRadius: 4,
+                display: 'flex',
+                gap: '6px',
+                alignItems: 'center',
+                border: '1px solid var(--border-color)'
+              }}>
                 {[0, 1, 2].map((i) => (
                   <motion.div
                     key={i}
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.2 }}
-                    style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-secondary)' }}
+                    animate={{
+                      y: [0, -8, 0],
+                      opacity: [0.5, 1, 0.5]
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      delay: i * 0.15,
+                      ease: "easeInOut"
+                    }}
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: 'var(--accent-primary)'
+                    }}
                   />
                 ))}
               </div>
@@ -181,46 +289,74 @@ function ChatApp() {
 
       {/* Input Area */}
       <form onSubmit={handleSubmit} style={{
-        padding: '1.5rem',
-        background: 'var(--bg-primary)',
+        padding: '1.5rem 2rem',
+        background: 'rgba(10, 10, 15, 0.95)',
         borderTop: '1px solid var(--border-color)',
         display: 'flex',
-        gap: '1rem'
+        gap: '1rem',
+        alignItems: 'center'
       }}>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your question..."
-          style={{
-            flex: 1,
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-color)',
-            padding: '1rem',
-            borderRadius: '12px',
-            color: 'var(--text-primary)',
-            outline: 'none',
-            fontSize: '1rem'
-          }}
-          onFocus={(e) => e.target.style.borderColor = 'var(--accent-primary)'}
-          onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
-        />
-        <button
+        <div style={{ flex: 1, position: 'relative' }}>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your question..."
+            style={{
+              width: '100%',
+              background: 'var(--bg-glass)',
+              border: '2px solid var(--border-color)',
+              padding: '1rem 1.25rem',
+              borderRadius: '14px',
+              color: 'var(--text-primary)',
+              outline: 'none',
+              fontSize: '1rem',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              fontWeight: 500
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = 'var(--accent-primary)';
+              e.target.style.boxShadow = 'var(--glow-primary)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'var(--border-color)';
+              e.target.style.boxShadow = 'none';
+            }}
+          />
+        </div>
+        <motion.button
           type="submit"
           disabled={!input.trim() || isLoading}
+          whileHover={{ scale: input.trim() && !isLoading ? 1.05 : 1 }}
+          whileTap={{ scale: input.trim() && !isLoading ? 0.95 : 1 }}
           style={{
-            background: 'var(--accent-primary)',
-            color: '#000',
-            width: '3.5rem',
+            background: input.trim() && !isLoading
+              ? 'var(--gradient-primary)'
+              : 'var(--bg-card)',
+            color: input.trim() && !isLoading ? '#000' : 'var(--text-secondary)',
+            width: '56px',
+            height: '56px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: '12px',
-            opacity: (!input.trim() || isLoading) ? 0.5 : 1
+            borderRadius: '14px',
+            border: '2px solid var(--border-color)',
+            cursor: input.trim() && !isLoading ? 'pointer' : 'not-allowed',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: input.trim() && !isLoading ? 'var(--glow-primary)' : 'none'
           }}
         >
-          <Send size={20} />
-        </button>
+          {isLoading ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            >
+              <Zap size={24} />
+            </motion.div>
+          ) : (
+            <Send size={22} strokeWidth={2.5} />
+          )}
+        </motion.button>
       </form>
     </div>
   );

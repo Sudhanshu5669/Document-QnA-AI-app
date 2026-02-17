@@ -13,6 +13,8 @@ const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 const { PromptTemplate } = require("@langchain/core/prompts");
 const { StringOutputParser } = require("@langchain/core/output_parsers");
 const { RunnableSequence } = require("@langchain/core/runnables");
+const auth = require('./auth/auth');
+const pool = require('./config/db.js')
 
 dotenv.config();
 
@@ -137,7 +139,7 @@ Question: {question}
 
 Instructions:
 - Answer the question based ONLY on the context provided above
-- If the context doesn't contain relevant information, say "I couldn't find that information in the document"
+- If the context doesn't contain relevant information, say "I couldn't find that information in the document. Did you upload a document related to your query?"
 - Be concise and accurate
 - Do not make up information
 
@@ -199,6 +201,29 @@ app.post('/api/ask', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+app.get('/api/listdocs', async (req, res)=>{
+    try{
+        const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
+            url: process.env.QDRANT_URL,
+            collectionName: "langchainjs-testing",
+        });
+
+        const client = vectorStore.client
+        const collectionName = "langchainjs-testing"
+
+        
+    } catch(error){
+
+    }
+})
+
+app.get("/test", async (req,res)=>{
+    const result = await pool.query("SELECT current_database()");
+    res.send(`the database name is ${result.rows[0].current_database}`)
+})
+
+app.use("/auth", auth);
+
+app.listen(PORT, async () => {
     console.log(`Server started on port ${PORT}...`)
 })
