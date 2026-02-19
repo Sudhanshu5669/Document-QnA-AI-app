@@ -15,6 +15,9 @@ const { StringOutputParser } = require("@langchain/core/output_parsers");
 const { RunnableSequence } = require("@langchain/core/runnables");
 const auth = require('./auth/auth');
 const pool = require('./config/db.js')
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
+
 
 dotenv.config();
 
