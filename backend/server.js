@@ -13,9 +13,10 @@ const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 const { PromptTemplate } = require("@langchain/core/prompts");
 const { StringOutputParser } = require("@langchain/core/output_parsers");
 const { RunnableSequence } = require("@langchain/core/runnables");
-const auth = require('./auth/auth');
+const auth = require('./auth/auth.js');
 const pool = require('./config/db.js')
 const cookieParser = require("cookie-parser");
+const verifyToken = require("../middleware/authMiddleware");
 app.use(cookieParser());
 
 
@@ -32,6 +33,7 @@ app.use(cors({
 
 // Middlewares to parse incoming data. First is for data sent using post requests and second is for form data.
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }))
 
 // Checks if a upload directory exists, if it doesn't, creates one.
@@ -81,7 +83,7 @@ const embeddings = new GoogleGenerativeAIEmbeddings({
     apiKey: process.env.GOOGLE_API_KEY
 });
 
-app.post('/api/upload', upload.single('pdf'), async (req, res) => {
+app.post('/api/upload', verifyToken, upload.single('pdf'), async (req, res) => {
     try {
         if (!req.file) {
             return res.json({
@@ -100,7 +102,9 @@ app.post('/api/upload', upload.single('pdf'), async (req, res) => {
             .map(chunk => ({
                 pageContent: chunk,
                 metadata: { 
-                    source: req.file.originalname 
+                    source: req.file.originalname,
+                    userId: req.user.id,
+                    email: req.user.email
                 }
             }));
 
@@ -110,6 +114,10 @@ app.post('/api/upload', upload.single('pdf'), async (req, res) => {
         });
 
         await vectorStore.addDocuments(documents);
+
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
 
         res.json({
             success: true,
@@ -149,7 +157,7 @@ Instructions:
 Answer:`
 );
 
-app.post('/api/ask', async (req, res) => {
+app.post('/api/ask', verifyToken, async (req, res) => {
     try {
         const { message } = req.body;
         
@@ -204,7 +212,7 @@ app.post('/api/ask', async (req, res) => {
     }
 });
 
-app.get('/api/listdocs', async (req, res)=>{
+app.get('/api/listdocs', verifyToken, async (req, res)=>{
     try{
         const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
             url: process.env.QDRANT_URL,
