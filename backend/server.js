@@ -16,13 +16,14 @@ const { RunnableSequence } = require("@langchain/core/runnables");
 const auth = require('./auth/auth.js');
 const pool = require('./config/db.js')
 const cookieParser = require("cookie-parser");
-const verifyToken = require("../middleware/authMiddleware");
-app.use(cookieParser());
+const verifyToken = require("./middlewares/authmiddleware.js");
+
 
 
 dotenv.config();
 
 const app = express()
+app.use(cookieParser());
 const PORT = process.env.PORT || 5000;
 
 // CORS - It will allow the Backend to communicate with the frontend.
@@ -174,7 +175,20 @@ app.post('/api/ask', verifyToken, async (req, res) => {
         });
 
         // Retrieve relevant documents
-        const retriever = vectorStore.asRetriever({ k: 4 });
+        const retriever = vectorStore.asRetriever({
+            k: 4,
+            filter: {
+                must: [
+                {
+                    key: "userId",
+                    match: {
+                    value: req.user.id
+                    }
+                }
+            ]
+        }
+        });
+
         const docs = await retriever.invoke(message);
         
         console.log(`Retrieved ${docs.length} documents`);

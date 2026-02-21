@@ -6,7 +6,7 @@ const { generateToken } = require("../utils/jwt.js");
 
 const saltRounds = 10;
 
-router.get('/signup', async (req,res)=>{
+router.post('/signup', async (req,res)=>{
     try{
     const {email, username, password} = req.body;
 
@@ -26,7 +26,7 @@ router.get('/signup', async (req,res)=>{
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const newUser = await pool.query(
-        "INSERT INTO users (email, username, hashedPassword) VALUES ($1, $2, $3) RETURNING id, email",
+        "INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING id, email",
         [email, username, hashedPassword]
     )
     
@@ -45,7 +45,7 @@ router.get('/signup', async (req,res)=>{
         message: "Signup successful"
     });
     } catch(err){
-        console.error(error);
+        console.error(err);
         res.status(500).json({ message: "Server error" });
     }
 });
