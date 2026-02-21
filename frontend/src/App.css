@@ -1,2 +1,22 @@
 /* App.css cleanup for new design system */
 /* Styles are now mainly in index.css and styled-components/inline styles */
+/* Markdown inside chat bubbles */
+.markdown p { margin: 0 0 0.5rem 0; }
+.markdown p:last-child { margin-bottom: 0; }
+.markdown ul, .markdown ol { padding-left: 1.5rem; margin: 0.5rem 0; }
+.markdown li { margin-bottom: 0.25rem; }
+.markdown strong { font-weight: 700; }
+.markdown code {
+  background: rgba(255,255,255,0.1);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-family: monospace;
+}
+.markdown pre {
+  background: rgba(0,0,0,0.3);
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}

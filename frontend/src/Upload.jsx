@@ -53,14 +53,22 @@ function Upload() {
     try {
       const response = await fetch("http://localhost:5000/api/upload", {
         method: "POST",
-        body: formData
+        body: formData,
+        credentials: "include", // sends the auth cookie to the backend
       });
+
+      if (response.status === 401 || response.status === 403) {
+        setMessage("You must be logged in to upload documents.");
+        setStatus("error");
+        return;
+      }
 
       const data = await response.json();
 
       if (data.success) {
         setMessage("Upload successful! Document processed.");
         setStatus("success");
+        setFile(null);
       } else {
         setMessage(data.error || "Upload failed");
         setStatus("error");

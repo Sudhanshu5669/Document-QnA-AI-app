@@ -18,7 +18,7 @@ async function clearDatabase() {
             url: process.env.QDRANT_URL,
         });
 
-        const collectionName = "langchainjs-testing";
+        const collectionName = "docchat-testing";
 
         // Check if collection exists
         const collections = await client.getCollections();

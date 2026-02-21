@@ -104,14 +104,14 @@ app.post('/api/upload', verifyToken, upload.single('pdf'), async (req, res) => {
                 pageContent: chunk,
                 metadata: { 
                     source: req.file.originalname,
-                    userId: req.user.id,
+                    userId: parseInt(req.user.id),  // ← cast to int
                     email: req.user.email
                 }
             }));
 
         const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
             url: process.env.QDRANT_URL,
-            collectionName: "langchainjs-testing",
+            collectionName: "docchat-testing",
         });
 
         await vectorStore.addDocuments(documents);
@@ -171,7 +171,7 @@ app.post('/api/ask', verifyToken, async (req, res) => {
         // Get vector store
         const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
             url: process.env.QDRANT_URL,
-            collectionName: "langchainjs-testing",
+            collectionName: "docchat-testing",
         });
 
         // Retrieve relevant documents
@@ -180,9 +180,9 @@ app.post('/api/ask', verifyToken, async (req, res) => {
             filter: {
                 must: [
                 {
-                    key: "userId",
+                    key: "metadata.userId",
                     match: {
-                    value: req.user.id
+                        value: parseInt(req.user.id)  // ← cast to int
                     }
                 }
             ]
@@ -230,11 +230,11 @@ app.get('/api/listdocs', verifyToken, async (req, res)=>{
     try{
         const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
             url: process.env.QDRANT_URL,
-            collectionName: "langchainjs-testing",
+            collectionName: "docchat-testing",
         });
 
         const client = vectorStore.client
-        const collectionName = "langchainjs-testing"
+        const collectionName = "docchat-testing"
 
         
     } catch(error){

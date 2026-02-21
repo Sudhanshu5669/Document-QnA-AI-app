@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, User, Bot, Sparkles, AlertTriangle, Zap } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 function ChatApp() {
   const [messages, setMessages] = useState([]);
@@ -31,6 +32,7 @@ function ChatApp() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage }),
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -206,26 +208,30 @@ function ChatApp() {
               </motion.div>
 
               {/* Message Bubble */}
-              <div style={{
-                maxWidth: '75%',
-                background: msg.role === 'user'
-                  ? 'var(--gradient-secondary)'
-                  : msg.role === 'error'
-                    ? 'rgba(239, 68, 68, 0.1)'
-                    : 'rgba(255, 255, 255, 0.05)',
-                padding: '1.25rem',
-                borderRadius: '18px',
-                borderTopRightRadius: msg.role === 'user' ? 4 : 18,
-                borderTopLeftRadius: msg.role !== 'user' ? 4 : 18,
-                lineHeight: 1.7,
-                fontSize: '1rem',
-                border: `1px solid ${msg.role === 'error' ? 'var(--accent-error)' : 'var(--border-color)'}`,
-                boxShadow: 'var(--shadow-md)',
-                color: msg.role === 'user' ? '#000' : 'var(--text-primary)',
-                fontWeight: msg.role === 'user' ? 600 : 400
-              }}>
-                {msg.content}
-              </div>
+<div className="markdown" style={{
+  maxWidth: '75%',
+  background: msg.role === 'user'
+    ? 'var(--gradient-secondary)'
+    : msg.role === 'error'
+      ? 'rgba(239, 68, 68, 0.1)'
+      : 'rgba(255, 255, 255, 0.05)',
+  padding: '1.25rem',
+  borderRadius: '18px',
+  borderTopRightRadius: msg.role === 'user' ? 4 : 18,
+  borderTopLeftRadius: msg.role !== 'user' ? 4 : 18,
+  lineHeight: 1.7,
+  fontSize: '1rem',
+  border: `1px solid ${msg.role === 'error' ? 'var(--accent-error)' : 'var(--border-color)'}`,
+  boxShadow: 'var(--shadow-md)',
+  color: msg.role === 'user' ? '#000' : 'var(--text-primary)',
+  fontWeight: msg.role === 'user' ? 600 : 400
+}}>
+  {msg.role === 'assistant' ? (
+    <ReactMarkdown style={{ all: 'unset' }}>{msg.content}</ReactMarkdown>
+  ) : (
+    msg.content
+  )}
+</div>
             </motion.div>
           ))}
 
