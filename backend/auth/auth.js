@@ -4,6 +4,9 @@ const bcrypt = require('bcrypt');
 const pool = require('../config/db.js')
 const { generateToken } = require("../utils/jwt.js");
 
+router.options("*", (req, res) => {
+  return res.sendStatus(200);
+});
 const saltRounds = 10;
 
 router.post('/signup', async (req,res)=>{
