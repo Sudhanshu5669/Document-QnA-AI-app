@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Mail, Lock } from 'lucide-react';
 import { useAuth } from './Authcontext';
+const ura = import.meta.env.VITE_BACKEND_URL;
 
 const inputStyle = {
   width: '100%',
@@ -31,7 +32,7 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/auth/login', {
+      const response = await fetch(ura + '/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

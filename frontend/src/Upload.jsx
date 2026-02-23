@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload as UploadIcon, FileText, CheckCircle, AlertCircle, Loader, CloudUpload, X } from "lucide-react";
+const ura = import.meta.env.VITE_BACKEND_URL;
 
 function Upload() {
   const [file, setFile] = useState(null);
@@ -43,7 +44,7 @@ function Upload() {
     const formData = new FormData();
     formData.append("pdf", file);
     try {
-      const response = await fetch("http://localhost:5000/api/upload", {
+      const response = await fetch(ura + "/api/upload", {
         method: "POST",
         body: formData,
         credentials: "include",

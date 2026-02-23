@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Mail, Lock, User, ShieldCheck } from 'lucide-react';
+const ura = import.meta.env.VITE_BACKEND_URL;
 
 const inputStyle = {
   width: '100%',
@@ -53,7 +54,7 @@ const Signup = () => {
     }
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/auth/signup', {
+      const response = await fetch(ura + '/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: formData.name, email: formData.email, password: formData.password }),

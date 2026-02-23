@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+const ura = import.meta.env.VITE_BACKEND_URL;
 
 const AuthContext = createContext(null);
 
@@ -12,7 +13,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('http://localhost:5000/auth/me', {
+        const res = await fetch( ura + '/auth/me', {
           credentials: 'include',
         });
         if (res.ok) {
@@ -32,7 +33,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async (navigate) => {
     try {
-      await fetch('http://localhost:5000/auth/logout', {
+      await fetch(ura + '/auth/logout', {
         method: 'POST',
         credentials: 'include',
       });

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, User, Bot, AlertTriangle, Zap, FileSearch } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+const ura = import.meta.env.VITE_BACKEND_URL;
 
 function ChatApp() {
   const [messages, setMessages] = useState([]);
@@ -24,7 +25,7 @@ function ChatApp() {
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/ask', {
+      const response = await fetch(ura + '/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage }),
