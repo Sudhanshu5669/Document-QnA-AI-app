@@ -1,80 +1,69 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload as UploadIcon, FileText, CheckCircle, AlertCircle, Loader, CloudUpload } from "lucide-react";
+import { Upload as UploadIcon, FileText, CheckCircle, AlertCircle, Loader, CloudUpload, X } from "lucide-react";
 
 function Upload() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [status, setStatus] = useState("idle"); // idle, success, error
+  const [status, setStatus] = useState("idle");
 
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
+  const handleFileChange = e => {
+    if (e.target.files?.[0]) {
       setFile(e.target.files[0]);
       setStatus("idle");
       setMessage("");
     }
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e) => {
+  const handleDragOver = e => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = e => { e.preventDefault(); setIsDragging(false); };
+  const handleDrop = e => {
     e.preventDefault();
     setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    if (e.dataTransfer.files?.[0]) {
       setFile(e.dataTransfer.files[0]);
       setStatus("idle");
       setMessage("");
     }
   };
 
-  const handleUpload = async () => {
-    if (!file) {
-      setMessage("Please select a file first");
-      setStatus("error");
-      return;
-    }
+  const clearFile = e => {
+    e.stopPropagation();
+    setFile(null);
+    setMessage("");
+    setStatus("idle");
+  };
 
+  const handleUpload = async () => {
+    if (!file) { setMessage("Please select a file first."); setStatus("error"); return; }
     setIsUploading(true);
     setStatus("idle");
-
     const formData = new FormData();
     formData.append("pdf", file);
-
     try {
       const response = await fetch("http://localhost:5000/api/upload", {
         method: "POST",
         body: formData,
-        credentials: "include", // sends the auth cookie to the backend
+        credentials: "include",
       });
-
       if (response.status === 401 || response.status === 403) {
-        setMessage("You must be logged in to upload documents.");
+        setMessage("You must be logged in to upload.");
         setStatus("error");
         return;
       }
-
       const data = await response.json();
-
       if (data.success) {
-        setMessage("Upload successful! Document processed.");
+        setMessage("Document processed and indexed.");
         setStatus("success");
         setFile(null);
       } else {
-        setMessage(data.error || "Upload failed");
+        setMessage(data.error || "Upload failed.");
         setStatus("error");
       }
-    } catch (err) {
-      setMessage("Server error. Check backend connection.");
+    } catch {
+      setMessage("Server error. Check your backend connection.");
       setStatus("error");
     } finally {
       setIsUploading(false);
@@ -88,109 +77,109 @@ function Upload() {
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: 'calc(100vh - 4rem)',
-      color: 'var(--text-primary)',
-      padding: '2rem'
+      padding: '2rem',
+      fontFamily: "'Syne', sans-serif",
+      color: '#F0EBE1',
     }}>
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-        style={{ width: '100%', maxWidth: '700px' }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        style={{ width: '100%', maxWidth: '620px' }}
       >
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            style={{
-              display: 'inline-flex',
-              background: 'var(--gradient-primary)',
-              padding: '1.25rem',
-              borderRadius: '20px',
-              marginBottom: '1.5rem',
-              boxShadow: 'var(--glow-strong)'
-            }}
-          >
-            <CloudUpload size={48} color="#000" />
-          </motion.div>
-          <h2 style={{
-            fontSize: '2.75rem',
-            fontWeight: 800,
-            marginBottom: '0.75rem',
-            background: 'var(--gradient-primary)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            letterSpacing: '-0.02em'
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          style={{ marginBottom: '2.5rem' }}
+        >
+          <div style={{
+            display: 'inline-block',
+            background: 'rgba(228,168,56,0.1)',
+            border: '1px solid rgba(228,168,56,0.2)',
+            borderRadius: '6px',
+            padding: '0.3rem 0.75rem',
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: '#E4A838',
+            marginBottom: '1rem',
           }}>
-            Upload Documents
-          </h2>
-          <p style={{
-            fontSize: '1.1rem',
-            color: 'var(--text-secondary)',
-            fontWeight: 500
+            Document Upload
+          </div>
+          <h1 style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 'clamp(2rem, 5vw, 3rem)',
+            fontWeight: 600,
+            fontStyle: 'italic',
+            color: '#F0EBE1',
+            lineHeight: 1.1,
+            letterSpacing: '-0.01em',
+            marginBottom: '0.5rem',
           }}>
-            Drop your PDF files here to get started
+            Add your documents.
+          </h1>
+          <p style={{ color: '#7A756E', fontSize: '0.9rem', lineHeight: 1.6 }}>
+            Upload a PDF to index it for AI-powered querying.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Dropzone */}
+        {/* Drop Zone */}
         <motion.div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           animate={{
-            borderColor: isDragging ? 'var(--accent-primary)' : 'var(--border-color)',
+            borderColor: isDragging
+              ? 'rgba(228,168,56,0.6)'
+              : file
+                ? 'rgba(228,168,56,0.3)'
+                : 'rgba(255,255,255,0.07)',
             background: isDragging
-              ? 'linear-gradient(135deg, rgba(0, 229, 255, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%)'
-              : 'var(--bg-glass)',
-            scale: isDragging ? 1.02 : 1
+              ? 'rgba(228,168,56,0.04)'
+              : 'rgba(22,22,26,0.6)',
           }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2 }}
           style={{
-            border: '2px dashed',
-            borderRadius: '24px',
-            padding: '4rem 2rem',
+            border: '1px dashed',
+            borderRadius: '12px',
+            padding: '3rem 2rem',
             textAlign: 'center',
             cursor: 'pointer',
             position: 'relative',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
             overflow: 'hidden',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            boxShadow: isDragging ? 'var(--glow-strong)' : 'var(--shadow-lg)'
           }}
         >
-          {/* Gradient Border Animation */}
-          {isDragging && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'var(--gradient-primary)',
-                opacity: 0.1,
-                pointerEvents: 'none'
-              }}
-            />
-          )}
+          {/* Subtle corner accents */}
+          {[
+            { top: 0, left: 0, borderTopLeftRadius: '12px' },
+            { top: 0, right: 0, borderTopRightRadius: '12px' },
+            { bottom: 0, left: 0, borderBottomLeftRadius: '12px' },
+            { bottom: 0, right: 0, borderBottomRightRadius: '12px' },
+          ].map((pos, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              width: '12px', height: '12px',
+              border: '2px solid rgba(228,168,56,0.4)',
+              borderTop: i < 2 ? '2px solid rgba(228,168,56,0.4)' : 'none',
+              borderBottom: i >= 2 ? '2px solid rgba(228,168,56,0.4)' : 'none',
+              borderLeft: i % 2 === 0 ? '2px solid rgba(228,168,56,0.4)' : 'none',
+              borderRight: i % 2 === 1 ? '2px solid rgba(228,168,56,0.4)' : 'none',
+              ...pos,
+            }} />
+          ))}
 
           <input
             type="file"
             accept="application/pdf"
             onChange={handleFileChange}
             style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              opacity: 0,
-              cursor: 'pointer'
+              position: 'absolute', inset: 0,
+              opacity: 0, cursor: 'pointer', width: '100%', height: '100%',
             }}
           />
 
@@ -198,209 +187,138 @@ function Upload() {
             {!file ? (
               <motion.div
                 key="empty"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}
               >
                 <motion.div
-                  animate={{
-                    y: isDragging ? -5 : [0, -10, 0],
-                    rotate: isDragging ? [0, -5, 5, 0] : 0
-                  }}
-                  transition={{
-                    y: { duration: isDragging ? 0.3 : 2, repeat: isDragging ? 0 : Infinity },
-                    rotate: { duration: 0.5 }
-                  }}
+                  animate={{ y: isDragging ? -6 : [0, -6, 0] }}
+                  transition={{ duration: isDragging ? 0.2 : 3, repeat: isDragging ? 0 : Infinity, ease: 'easeInOut' }}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    padding: '2rem',
-                    borderRadius: '50%',
-                    border: '2px solid var(--border-color)'
+                    width: '64px', height: '64px',
+                    borderRadius: '14px',
+                    background: 'rgba(228,168,56,0.08)',
+                    border: '1px solid rgba(228,168,56,0.15)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >
-                  <UploadIcon size={56} color={isDragging ? 'var(--accent-primary)' : 'var(--text-secondary)'} />
+                  <CloudUpload size={28} color={isDragging ? '#E4A838' : '#7A756E'} style={{ transition: 'color 0.2s' }} />
                 </motion.div>
                 <div>
-                  <h3 style={{
-                    fontSize: '1.35rem',
-                    marginBottom: '0.5rem',
-                    fontWeight: 700
-                  }}>
-                    {isDragging ? 'Drop your PDF here' : 'Drag & Drop PDF'}
-                  </h3>
-                  <p style={{
-                    color: 'var(--text-secondary)',
-                    fontSize: '1rem'
-                  }}>
-                    or click to browse your files
+                  <p style={{ fontSize: '1rem', fontWeight: 600, color: isDragging ? '#E4A838' : '#F0EBE1', marginBottom: '0.35rem', transition: 'color 0.2s' }}>
+                    {isDragging ? 'Release to upload' : 'Drop PDF here or click to browse'}
                   </p>
-                  <p style={{
-                    color: 'var(--text-tertiary)',
-                    fontSize: '0.875rem',
-                    marginTop: '0.5rem'
-                  }}>
-                    Supported format: PDF
+                  <p style={{ fontSize: '0.8rem', color: '#3E3C38', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.05em' }}>
+                    PDF · max 10 MB
                   </p>
                 </div>
               </motion.div>
             ) : (
               <motion.div
                 key="file"
-                initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}
+                initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.3 }}
+                style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'center' }}
               >
-                <motion.div
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  style={{
-                    background: 'var(--gradient-primary)',
-                    padding: '1.5rem',
-                    borderRadius: '20px',
-                    boxShadow: 'var(--glow-primary)'
-                  }}
-                >
-                  <FileText size={64} color="#000" />
-                </motion.div>
-                <div>
-                  <h3 style={{
-                    fontSize: '1.25rem',
-                    fontWeight: 700,
-                    marginBottom: '0.5rem'
+                <div style={{
+                  width: '48px', height: '48px', borderRadius: '10px', flexShrink: 0,
+                  background: 'rgba(228,168,56,0.1)', border: '1px solid rgba(228,168,56,0.2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <FileText size={22} color="#E4A838" />
+                </div>
+                <div style={{ textAlign: 'left', minWidth: 0 }}>
+                  <p style={{
+                    fontSize: '0.9rem', fontWeight: 600, color: '#F0EBE1',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '260px',
                   }}>
                     {file.name}
-                  </h3>
-                  <p style={{
-                    color: 'var(--text-secondary)',
-                    fontSize: '1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    justifyContent: 'center'
-                  }}>
-                    <span style={{
-                      background: 'var(--gradient-primary)',
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '8px',
-                      fontSize: '0.875rem',
-                      fontWeight: 700,
-                      color: '#000'
-                    }}>
-                      {(file.size / 1024 / 1024).toFixed(2)} MB
-                    </span>
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: '#7A756E', marginTop: '0.2rem', fontFamily: "'JetBrains Mono', monospace" }}>
+                    {(file.size / 1024 / 1024).toFixed(2)} MB · PDF
                   </p>
                 </div>
+                <button
+                  onClick={clearFile}
+                  style={{
+                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '6px', padding: '0.35rem', cursor: 'pointer',
+                    color: '#7A756E', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    position: 'relative', zIndex: 2, flexShrink: 0,
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(217,95,75,0.1)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                >
+                  <X size={14} />
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
 
-        {/* Upload Button & Status */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}
-        >
+        {/* Upload Button */}
+        <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <motion.button
             onClick={handleUpload}
             disabled={!file || isUploading}
-            whileHover={{ scale: file && !isUploading ? 1.02 : 1 }}
-            whileTap={{ scale: file && !isUploading ? 0.98 : 1 }}
+            whileHover={file && !isUploading ? { scale: 1.01 } : {}}
+            whileTap={file && !isUploading ? { scale: 0.99 } : {}}
             style={{
               width: '100%',
-              padding: '1.25rem',
-              borderRadius: '16px',
-              background: file && !isUploading
-                ? 'var(--gradient-primary)'
-                : 'var(--bg-card)',
-              color: file && !isUploading ? '#000' : 'var(--text-secondary)',
+              padding: '0.9rem',
+              borderRadius: '8px',
+              background: file && !isUploading ? '#E4A838' : 'rgba(255,255,255,0.04)',
+              border: '1px solid',
+              borderColor: file && !isUploading ? 'transparent' : 'rgba(255,255,255,0.07)',
+              color: file && !isUploading ? '#0B0B0D' : '#3E3C38',
+              fontFamily: "'Syne', sans-serif",
               fontWeight: 700,
-              fontSize: '1.1rem',
-              border: '2px solid var(--border-color)',
-              cursor: (file && !isUploading) ? 'pointer' : 'not-allowed',
+              fontSize: '0.875rem',
+              letterSpacing: '0.04em',
+              cursor: file && !isUploading ? 'pointer' : 'not-allowed',
               display: 'flex',
-              justifyContent: 'center',
               alignItems: 'center',
-              gap: '0.75rem',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: file && !isUploading ? 'var(--glow-primary)' : 'none'
+              justifyContent: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s ease',
+              boxShadow: file && !isUploading ? '0 4px 20px rgba(228,168,56,0.2)' : 'none',
             }}
           >
             {isUploading ? (
               <>
-                Processing
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                >
-                  <Loader size={24} />
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+                  <Loader size={16} />
                 </motion.div>
+                Processing document...
               </>
             ) : (
-              <>
-                <UploadIcon size={24} />
-                Upload Document
-              </>
+              <><UploadIcon size={16} /> Upload Document</>
             )}
           </motion.button>
 
-          {/* Status Message */}
+          {/* Status */}
           <AnimatePresence>
             {message && (
               <motion.div
-                initial={{ opacity: 0, height: 0, y: -10 }}
-                animate={{ opacity: 1, height: 'auto', y: 0 }}
-                exit={{ opacity: 0, height: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25 }}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '1rem 1.5rem',
-                  borderRadius: '14px',
-                  background: status === 'error'
-                    ? 'rgba(239, 68, 68, 0.1)'
-                    : status === 'success'
-                      ? 'rgba(16, 185, 129, 0.1)'
-                      : 'rgba(255, 255, 255, 0.03)',
-                  border: `2px solid ${status === 'error' ? 'var(--accent-error)' : status === 'success' ? 'var(--accent-success)' : 'var(--border-color)'}`,
-                  color: status === 'error'
-                    ? 'var(--accent-error)'
-                    : status === 'success'
-                      ? 'var(--accent-success)'
-                      : 'var(--text-secondary)',
-                  fontWeight: 600,
-                  fontSize: '1rem'
+                  display: 'flex', alignItems: 'center', gap: '0.6rem',
+                  padding: '0.75rem 1rem', borderRadius: '8px',
+                  background: status === 'error' ? 'rgba(217,95,75,0.08)' : status === 'success' ? 'rgba(77,168,130,0.08)' : 'transparent',
+                  border: `1px solid ${status === 'error' ? 'rgba(217,95,75,0.25)' : status === 'success' ? 'rgba(77,168,130,0.25)' : 'transparent'}`,
+                  color: status === 'error' ? '#D95F4B' : status === 'success' ? '#4DA882' : '#7A756E',
+                  fontSize: '0.85rem',
+                  fontWeight: 500,
                 }}
               >
-                {status === 'success' && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 10 }}
-                  >
-                    <CheckCircle size={24} />
-                  </motion.div>
-                )}
-                {status === 'error' && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 10 }}
-                  >
-                    <AlertCircle size={24} />
-                  </motion.div>
-                )}
+                {status === 'success' && <CheckCircle size={16} />}
+                {status === 'error' && <AlertCircle size={16} />}
                 {message}
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
       </motion.div>
     </div>
   );

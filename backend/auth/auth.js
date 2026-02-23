@@ -88,7 +88,8 @@ router.post("/login", async (req, res) => {
         });
 
         res.json({
-            message: "Login successful"
+            message: "Login successful",
+            user: user
         });
 
     } catch (error) {
@@ -100,6 +101,12 @@ router.post("/login", async (req, res) => {
 router.post("/logout", (req, res) => {
     res.clearCookie("token");
     res.json({ message: "Logged out successfully" });
+});
+
+const verifyToken = require('../middlewares/authmiddleware.js');
+
+router.get('/me', verifyToken, (req, res) => {
+  res.json({ user: req.user });
 });
 
 module.exports = router
