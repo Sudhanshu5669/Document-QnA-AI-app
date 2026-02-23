@@ -101,7 +101,7 @@ app.post('/api/upload', verifyToken, upload.single('pdf'), async (req, res) => {
             });
         }
 
-        const filePath = req.file.path;
+        const filePath = req.file.buffer;
         const text = await PDFService.extractTextFromPdf(filePath)
         const cleanedText = PDFService.cleanText(text);
         const chunks = PDFService.splitTextIntoChunks(cleanedText)
