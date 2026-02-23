@@ -29,7 +29,10 @@ const PORT = process.env.PORT || 5000;
 
 // CORS - It will allow the Backend to communicate with the frontend.
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: [
+    "http://localhost:5173",
+    "https://docqna.sudhanshucodes.me"
+  ],
     credentials: true
 }))
 
