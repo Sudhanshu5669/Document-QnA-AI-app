@@ -36,6 +36,10 @@ app.use(cors({
     credentials: true
 }))
 
+app.options("*", (req, res) => {
+  res.sendStatus(200);
+});
+
 // Middlewares to parse incoming data. First is for data sent using post requests and second is for form data.
 app.use(express.json());
 app.use(cookieParser());
