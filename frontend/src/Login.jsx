@@ -40,8 +40,7 @@ const Login = () => {
       });
       const data = await response.json();
       
-      
-      if (!response.ok) {
+      if (!response.ok || !data.user) {
         console.log("ok");
         setError(data.message || 'Invalid credentials.');
         return;

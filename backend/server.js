@@ -46,21 +46,21 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }))
 
 // Checks if a upload directory exists, if it doesn't, creates one.
-const uploadsDir = path.join(__dirname, 'uploads')
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true })
-}
+// const uploadsDir = path.join(__dirname, 'uploads')
+// if (!fs.existsSync(uploadsDir)) {
+//     fs.mkdirSync(uploadsDir, { recursive: true })
+// }
 
 // Configures Multer Storage, the destination and filename. Using Date.now() will prevent conflicts and original name can be used to indentify easily what file is being used.
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadsDir)
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = `${Date.now()}-${file.originalname}`;
-        cb(null, uniqueName)
-    }
-})
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         cb(null, uploadsDir)
+//     },
+//     filename: (req, file, cb) => {
+//         const uniqueName = `${Date.now()}-${file.originalname}`;
+//         cb(null, uniqueName)
+//     }
+// })
 
 // This will filter any files that are not PDFs.
 const fileFilter = (req, file, cb) => {
@@ -72,12 +72,12 @@ const fileFilter = (req, file, cb) => {
 }
 
 const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter,
-    limits: {
-        fileSize: 10 * 1024 * 1024
-    }
-})
+  storage: multer.memoryStorage(),
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024
+  }
+});
 
 // Initialize LLM
 const llm = new ChatGoogleGenerativeAI({
@@ -125,9 +125,9 @@ app.post('/api/upload', verifyToken, upload.single('pdf'), async (req, res) => {
 
         await vectorStore.addDocuments(documents);
 
-        if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
+        // if (req.file && fs.existsSync(req.file.path)) {
+        //     fs.unlinkSync(req.file.path);
+        // }
 
         res.json({
             success: true,
@@ -137,9 +137,9 @@ app.post('/api/upload', verifyToken, upload.single('pdf'), async (req, res) => {
     } catch (error) {
         console.log("[ERROR] Upload Failed:", error)
 
-        if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
+        // if (req.file && fs.existsSync(req.file.path)) {
+        //     fs.unlinkSync(req.file.path);
+        // }
 
         res.status(500).json({
             success: false,
