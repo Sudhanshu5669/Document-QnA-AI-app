@@ -17,6 +17,7 @@ const auth = require('./auth/auth.js');
 const pool = require('./config/db.js')
 const cookieParser = require("cookie-parser");
 const verifyToken = require("./middlewares/authmiddleware.js");
+const { QdrantClient } = require("@qdrant/js-client-rest");
 
 
 
@@ -111,6 +112,7 @@ app.post('/api/upload', verifyToken, upload.single('pdf'), async (req, res) => {
 
         const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
             url: process.env.QDRANT_URL,
+            apiKey: process.env.QDRANT_API,
             collectionName: "docchat-testing",
         });
 
@@ -171,6 +173,7 @@ app.post('/api/ask', verifyToken, async (req, res) => {
         // Get vector store
         const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
             url: process.env.QDRANT_URL,
+            apiKey: process.env.QDRANT_API,
             collectionName: "docchat-testing",
         });
 
@@ -230,6 +233,7 @@ app.get('/api/listdocs', verifyToken, async (req, res)=>{
     try{
         const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
             url: process.env.QDRANT_URL,
+            apiKey: process.env.QDRANT_API,
             collectionName: "docchat-testing",
         });
 
@@ -250,5 +254,41 @@ app.get("/test", async (req,res)=>{
 app.use("/auth", auth);
 
 app.listen(PORT, async () => {
-    console.log(`Server started on port ${PORT}...`)
-})
+    console.log(`Server started on port ${PORT}...`);
+        const client = new QdrantClient({
+        url: process.env.QDRANT_URL,
+        apiKey: process.env.QDRANT_API,
+        checkCompatibility: false
+    });
+
+    const collectionName = "docchat-testing";
+
+    try {
+        // Step 1: Check if collection exists
+        await client.getCollection(collectionName);
+        console.log("Collection exists.");
+    } catch (err) {
+        console.log("Collection does not exist. Creating...");
+
+        await client.createCollection(collectionName, {
+            vectors: {
+                size: 3072, // IMPORTANT: must match your embedding size
+                distance: "Cosine"
+            }
+        });
+
+        console.log("Collection created.");
+    }
+
+    try {
+        // Step 2: Create payload index
+        await client.createPayloadIndex(collectionName, {
+            field_name: "metadata.userId",
+            field_schema: "integer"
+        });
+
+        console.log("Payload index created.");
+    } catch (err) {
+        console.log("Index may already exist:", err.message);
+    }
+});
